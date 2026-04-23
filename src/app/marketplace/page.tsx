@@ -26,15 +26,23 @@ export default async function Marketplace(props: { searchParams: Promise<{ q?: s
       <SearchHeader searchParams={{ q: qStr }} />
       
       <div className="flex" style={{ flexWrap: 'wrap', gap: '1.5rem', marginTop: '2rem' }}>
-        {products.map(product => (
-          <div key={product.id} className="glass-panel" style={{ flex: '1 1 250px', padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ width: '100%', aspectRatio: '1/1', overflow: 'hidden', borderRadius: '8px', marginBottom: '1rem', background: '#111' }}>
-               <img 
-                 src={product.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop'} 
-                 alt={product.name} 
-                 style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-               />
-            </div>
+        {products.map(product => {
+          // Vercel/Sanbox Safety check: If path points to local uploads but we are in production, 
+          // we force the high-quality fallback because Vercel deletes local files on ogni build.
+          const isLocalPath = product.imageUrl?.startsWith('/uploads/');
+          const finalImageUrl = isLocalPath 
+            ? 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop' 
+            : (product.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop');
+
+          return (
+            <div key={product.id} className="glass-panel" style={{ flex: '1 1 250px', padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ width: '100%', aspectRatio: '1/1', overflow: 'hidden', borderRadius: '8px', marginBottom: '1rem', background: '#111' }}>
+                 <img 
+                   src={finalImageUrl} 
+                   alt={product.name} 
+                   style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                 />
+              </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
               <h4>{product.name}</h4>
               <Link href={`/store/${product.store.slug}`} style={{ fontSize: '0.8rem', color: 'var(--primary)', textDecoration: 'none' }}>

@@ -10,14 +10,7 @@ export default function EditProduct() {
   const productId = params?.id as string;
 
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    price: '',
-    brand: '',
-    description: '',
-    imageUrl: '',
-    isDigital: false
-  });
+  const [file, setFile] = useState<File | null>(null);
 
   useEffect(() => {
     fetch(`/api/products/details?id=${productId}`)
@@ -39,11 +32,25 @@ export default function EditProduct() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    let currentImageUrl = formData.imageUrl;
+
     try {
+      // 1. Handle new image if selected
+      if (file) {
+        const upData = new FormData();
+        upData.append('file', file);
+        const upRes = await fetch('/api/upload', { method: 'POST', body: upData });
+        const upJson = await upRes.json();
+        if (upJson.success) {
+           currentImageUrl = upJson.url;
+        }
+      }
+
+      // 2. Update product
       const res = await fetch('/api/products/update', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId, ...formData })
+        body: JSON.stringify({ id: productId, ...formData, imageUrl: currentImageUrl })
       });
       const data = await res.json();
       if (data.success) {
@@ -74,6 +81,12 @@ export default function EditProduct() {
       </div>
 
       <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '2rem' }}>
+        <div className="mb-6 flex justify-center">
+            <div style={{ width: '120px', height: '120px', borderRadius: '12px', overflow: 'hidden', background: '#111', border: '1px solid var(--border)' }}>
+                <img src={formData.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=1000&auto=format&fit=crop'} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+        </div>
+
         <div className="mb-4">
           <label className="label">Product Name</label>
           <input 
@@ -115,6 +128,17 @@ export default function EditProduct() {
             value={formData.description}
             onChange={e => setFormData({...formData, description: e.target.value})}
           />
+        </div>
+
+        <div className="mb-6">
+          <label className="label">Change Product Image</label>
+          <input 
+            type="file" 
+            className="input" 
+            accept="image/*"
+            onChange={e => setFile(e.target.files?.[0] || null)}
+          />
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>Leave empty to keep the current image.</p>
         </div>
 
         <div className="mb-8">
