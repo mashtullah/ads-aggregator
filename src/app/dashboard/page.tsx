@@ -80,7 +80,10 @@ export default async function Dashboard() {
                            <p style={{ fontSize: '0.9rem' }}>KES {p.price}</p>
                         </div>
                      </div>
-                     <Link href={`/dashboard/products/${p.id}/ad`} className="btn btn-secondary" style={{ textDecoration: 'none' }}>AI Ad Module</Link>
+                     <div className="flex gap-2">
+                        <Link href={`/dashboard/products/${p.id}/edit`} className="btn btn-outline" style={{ textDecoration: 'none', fontSize: '0.8rem', padding: '0.5rem' }}>Edit</Link>
+                        <Link href={`/dashboard/products/${p.id}/ad`} className="btn btn-secondary" style={{ textDecoration: 'none' }}>AI Ad Module</Link>
+                     </div>
                   </div>
                )
             })}
