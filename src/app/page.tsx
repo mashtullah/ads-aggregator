@@ -1,66 +1,42 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <div className="container animate-fade-in">
+      <div className="flex flex-col items-center justify-center text-center mt-8 gap-6" style={{ minHeight: '60vh' }}>
+        <h1 style={{ maxWidth: '800px' }}>
+          Sell Anything, Let <span style={{ color: "var(--primary)" }}>AI</span> Handle the Marketing.
+        </h1>
+        <p style={{ maxWidth: '600px' }}>
+          Oskido combines your personal creator store with an AI powerhouse. Upload a product and 
+          watch as we generate text, image, and voice ads, deploying them directly to Meta.
+        </p>
+        <div className="flex gap-4 mt-4">
+          <Link href="/register" className="btn btn-primary">
+            Start Your 30-Day Free Trial
+          </Link>
+          <Link href="/marketplace" className="btn btn-outline">
+            Browse Marketplace
+          </Link>
         </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+      
+      <div className="glass-panel" style={{ padding: '3rem', marginTop: '4rem', marginBottom: '4rem' }}>
+        <div className="flex justify-between items-center gap-8" style={{ flexWrap: 'wrap' }}>
+          <div className="flex-col gap-4" style={{ flex: '1 1 300px' }}>
+            <h3>1. Create Your Store</h3>
+            <p>Setup your personal link and branding in seconds.</p>
+          </div>
+          <div className="flex-col gap-4" style={{ flex: '1 1 300px' }}>
+            <h3>2. Upload Products</h3>
+            <p>Physical goods or digital courses. We support it all.</p>
+          </div>
+          <div className="flex-col gap-4" style={{ flex: '1 1 300px' }}>
+            <h3>3. AI Generates Ads</h3>
+            <p>Perfect visuals and voiceovers, ready for Facebook & Instagram.</p>
+          </div>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
