@@ -58,14 +58,22 @@ export async function POST(req: Request) {
 
     // Prepare media directories
     const uploadDir = join(process.cwd(), 'public', 'uploads');
-    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-
     const mediaId = uuidv4();
-    const mockAudioUrl = `/uploads/audio-${mediaId}.mp3`;
-    const mockVideoUrl = `/uploads/ad-${mediaId}.mp4`;
+    let mockAudioUrl = `/uploads/audio-${mediaId}.mp3`;
+    let mockVideoUrl = `/uploads/ad-${mediaId}.mp4`;
     
-    const audioPathDesktop = join(uploadDir, `audio-${mediaId}.mp3`);
-    const videoPathDesktop = join(uploadDir, `ad-${mediaId}.mp4`);
+    try {
+      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+      const audioPathDesktop = join(uploadDir, `audio-${mediaId}.mp3`);
+      const videoPathDesktop = join(uploadDir, `ad-${mediaId}.mp4`);
+      await writeFile(audioPathDesktop, Buffer.from('mock audio buffer'));
+      await createMockVideo(videoPathDesktop);
+    } catch (fsError) {
+      console.warn('Filesystem mapping failed on Serverless, using absolute placeholders.');
+      // Vercel fallback URL assignments
+      mockAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+      mockVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
+    }
 
     // --- 2. Create Ad Object in DB ---
     const ad = await db.advertisement.create({
@@ -77,11 +85,6 @@ export async function POST(req: Request) {
         status: 'GENERATED'
       }
     });
-
-    // --- 3. Dummy Media Placement for Sandbox UI ---
-    // Instead of completely hanging if fluent-ffmpeg crashes on host PC due to missing binaries, we write stubs reliably
-    await writeFile(audioPathDesktop, Buffer.from('mock audio buffer'));
-    await createMockVideo(videoPathDesktop);
 
     return NextResponse.json({ success: true, ad }, { status: 201 });
     
