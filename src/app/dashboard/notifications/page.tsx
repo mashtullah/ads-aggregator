@@ -4,6 +4,8 @@ import { db } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic';
+
 export default async function Notifications() {
   const session = await getServerSession(authOptions);
   if (!session) redirect('/login');

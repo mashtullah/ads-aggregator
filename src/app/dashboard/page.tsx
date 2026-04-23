@@ -4,6 +4,8 @@ import { redirect } from "next/navigation"
 import { db } from "@/lib/prisma"
 import Link from 'next/link'
 
+export const dynamic = 'force-dynamic';
+
 export default async function Dashboard() {
   const session = await getServerSession(authOptions);
 

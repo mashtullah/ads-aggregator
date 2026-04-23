@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import Link from 'next/link';
 import NavAlerts from "./NavAlerts";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getServerSession(authOptions);
   
