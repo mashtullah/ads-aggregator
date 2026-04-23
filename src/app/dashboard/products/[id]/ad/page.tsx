@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -9,13 +9,28 @@ export default function AdGenerator() {
   const productId = params?.id as string;
   
   const [loading, setLoading] = useState(false);
+  const [product, setProduct] = useState<any>(null);
   const [ad, setAd] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
   const [instructions, setInstructions] = useState('');
   
   const [targeting, setTargeting] = useState<any>(null);
   const [targetLoading, setTargetLoading] = useState(false);
-  
   const [deployed, setDeployed] = useState<any>(null);
+
+  useEffect(() => {
+    if (productId) {
+      fetch(`/api/products/details?id=${productId}`)
+        .then(res => res.json())
+        .then(data => {
+            setProduct(data.product);
+            setHistory(data.product.ads || []);
+            if (data.product.ads?.length > 0) {
+                setAd(data.product.ads[0]);
+            }
+        });
+    }
+  }, [productId]);
 
   const handleGenerate = async () => {
     setLoading(true);
@@ -25,11 +40,16 @@ export default function AdGenerator() {
       const res = await fetch('/api/ai/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, instructions })
+        body: JSON.stringify({ 
+            productId, 
+            instructions,
+            history: history.map(h => h.script).slice(0, 3) // Give last 3 as context
+        })
       });
       const data = await res.json();
       if (data.success) {
         setAd(data.ad);
+        setHistory([data.ad, ...history]);
         setInstructions('');
       } else alert(data.message);
     } catch (err) {
@@ -41,6 +61,7 @@ export default function AdGenerator() {
   };
 
   const handleSuggestTargeting = async () => {
+    if (!ad) return;
     setTargetLoading(true);
     try {
       const res = await fetch('/api/meta/target', {
@@ -59,23 +80,18 @@ export default function AdGenerator() {
     }
   };
 
-  const handleDeployToMeta = async () => {
+  const handleDeploy = async () => {
+    if (!ad) return;
     setTargetLoading(true);
     try {
-      const res = await fetch('/api/meta/deploy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adId: ad.id, targeting })
-      });
-      const data = await res.json();
-      if (data.success) {
-        setDeployed(data.campaign);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setTargetLoading(false);
-    }
+       const res = await fetch('/api/meta/deploy', {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({ adId: ad.id, targeting })
+       });
+       const data = await res.json();
+       if (data.success) setDeployed(data.campaign);
+    } catch (err) {} finally { setTargetLoading(false); }
   };
 
   return (
@@ -88,95 +104,127 @@ export default function AdGenerator() {
       <div className="flex gap-8" style={{ flexWrap: 'wrap' }}>
         
         {/* Left Column: Generator Controls */}
-        <div style={{ flex: '1 1 400px' }}>
+        <div style={{ flex: '2 1 500px' }}>
           <div className="glass-panel" style={{ padding: '2rem' }}>
-            <h3>Prompt AI</h3>
+            <h3>Prompt AI & Refine</h3>
             <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-              We'll automatically read your product description, but you can feed the AI secondary commands below (e.g., "Make it funny" or "Target 18-24 demographics").
+               Give specific feedback to the AI (e.g. "Add a deep male voiceover", "Mention 50% discount", "Make the font bigger").
             </p>
             
             <textarea 
               className="input mb-4" 
               rows={4} 
-              placeholder="Refining instructions..." 
+              placeholder="Type your refinement instructions here..." 
               value={instructions}
               onChange={e => setInstructions(e.target.value)}
               style={{ width: '100%', marginBottom: '1rem' }}
             />
             
             <button className="btn btn-primary" onClick={handleGenerate} disabled={loading} style={{ width: '100%' }}>
-              {loading ? 'Consulting AI Lab...' : ad ? 'Regenerate Ad' : 'Generate Ad'}
+              {loading ? 'Consulting Global AI...' : ad ? 'Apply Changes / Regenerate' : 'Generate Global Ad'}
             </button>
-            
-            {ad && !deployed && (
-              <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-                 <h3>Distribution</h3>
-                 <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '1rem' }}>Get AI audience suggestions before executing budget.</p>
-                 <button className="btn btn-outline w-full" style={{ width: '100%' }} disabled={targetLoading} onClick={handleSuggestTargeting}>
-                    {targetLoading ? 'Calculating...' : '🔮 Suggest Meta Targeting'}
+
+            {ad && (
+               <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
+                 <h3>Global Targeting Suggester</h3>
+                 <button className="btn btn-outline" style={{ width: '100%', marginTop: '0.5rem' }} onClick={handleSuggestTargeting} disabled={targetLoading}>
+                   {targetLoading ? 'Synthesizing...' : '🔮 Get Global Audience Insights'}
                  </button>
                  
                  {targeting && (
-                   <div className="mt-4 p-4" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                     <p><strong>Ages:</strong> {targeting.ageRange}</p>
-                     <p><strong>Locations:</strong> {targeting.locations?.join(', ')}</p>
-                     <p><strong>Interests:</strong> {targeting.interests?.join(', ')}</p>
-                     
-                     <button className="btn btn-secondary mt-4 w-full" style={{ width: '100%', marginTop: '1rem' }} onClick={handleDeployToMeta}>
-                       Deploy Live to Facebook/Ig!
-                     </button>
-                   </div>
+                    <div className="mt-4 p-4 animate-fade-in" style={{ backgroundColor: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                       <p><strong>Recommended Geographies:</strong> Global Focus (Multi-region)</p>
+                       <p><strong>Ages:</strong> {targeting.ageRange}</p>
+                       <p><strong>Interests:</strong> {targeting.interests?.join(', ')}</p>
+                       <button className="btn btn-secondary mt-4" style={{ width: '100%' }} onClick={handleDeploy}>Deploy to Meta Ads</button>
+                    </div>
                  )}
-              </div>
+
+                 {deployed && (
+                    <div className="mt-4 p-4" style={{ background: 'var(--primary)', color: 'black', borderRadius: '8px' }}>
+                       <strong>✅ Ad Activated Globally!</strong>
+                       <p style={{ fontSize: '0.8rem' }}>Meta ID: {deployed.metaAdId}</p>
+                    </div>
+                 )}
+               </div>
             )}
-            
-            {deployed && (
-              <div className="mt-8 pt-6" style={{ borderTop: '1px solid var(--border)' }}>
-                 <p style={{ color: 'var(--primary)', fontWeight: 'bold' }}>✅ Campaign Active on Meta!</p>
-                 <p style={{ fontSize: '0.85rem' }}>Campaign ID: {deployed.metaCampaignId}</p>
-                 <p style={{ fontSize: '0.85rem' }}>Ad Set ID: {deployed.metaAdSetId}</p>
-                 <p style={{ fontSize: '0.85rem' }}>Ad ID: {deployed.metaAdId}</p>
-                 <Link href="/dashboard" className="btn btn-outline mt-4" style={{ width: '100%' }}>Return to Dashboard</Link>
-              </div>
-            )}
+          </div>
+
+          <div className="glass-panel mt-8" style={{ padding: '2rem' }}>
+             <h3>Ad Version History</h3>
+             <div className="flex flex-col gap-3 mt-4" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                {history.map((h, i) => (
+                   <div key={h.id} className="p-3" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '8px', cursor: 'pointer', border: ad?.id === h.id ? '1px solid var(--primary)' : '1px solid transparent' }} onClick={() => setAd(h)}>
+                      <p style={{ fontSize: '0.8rem', opacity: 0.6 }}>Version {history.length - i} - {new Date(h.createdAt).toLocaleDateString()}</p>
+                      <p style={{ fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{h.script}</p>
+                   </div>
+                ))}
+             </div>
           </div>
         </div>
 
-        {/* Right Column: Preview Panel */}
-        <div style={{ flex: '1 1 500px' }}>
-           <div className="glass-panel" style={{ padding: '2rem', height: '100%' }}>
-              <h3>Output Preview</h3>
+        {/* Right Column: Preview Panel with CSS Overlay */}
+        <div style={{ flex: '1 1 400px' }}>
+           <div className="glass-panel" style={{ padding: '2rem', height: '100%', position: 'sticky', top: '2rem' }}>
+              <h3>Creative Preview</h3>
               
               {!ad && !loading && (
                  <div style={{ padding: '3rem 0', textAlign: 'center', color: 'var(--text-muted)' }}>
-                    <p>No ad generated yet.</p>
+                    <p>Waiting for generation...</p>
                  </div>
               )}
 
               {loading && (
                  <div style={{ padding: '3rem 0', textAlign: 'center' }}>
-                    <p className="animate-fade-in" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
-                       ✨ AI is crafting text, splicing image, and rendering TTS voice...
+                    <p className="animate-pulse" style={{ color: 'var(--primary)', fontWeight: 'bold' }}>
+                       ✨ AI is splicing image, text, and generating human-like voiceover...
                     </p>
                  </div>
               )}
 
               {ad && !loading && (
                  <div className="animate-fade-in mt-4">
-                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
-                       <h4 style={{ color: 'var(--secondary)' }}>Generated Script (Meta Text)</h4>
-                       <p style={{ marginTop: '0.5rem', fontStyle: 'italic' }}>"{ad.script}"</p>
+                    {/* HTML/CSS Text Overlay System */}
+                    <div style={{ position: 'relative', width: '100%', aspectRatio: '4/5', borderRadius: '12px', overflow: 'hidden', background: '#000' }}>
+                        {product?.imageUrl ? (
+                           <img src={product.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 0.7 }} alt="Ad Base" />
+                        ) : (
+                           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#111' }}>
+                              <span style={{ color: '#333' }}>No Product Image</span>
+                           </div>
+                        )}
+                        
+                        {/* THE OVERLAY */}
+                        <div style={{ position: 'absolute', bottom: '10%', left: '5%', right: '5%', textAlign: 'center', zIndex: 10 }}>
+                           <p style={{ 
+                              background: 'rgba(0,0,0,0.8)', 
+                              color: 'white', 
+                              padding: '1rem', 
+                              borderRadius: '8px', 
+                              fontSize: '1.1rem', 
+                              fontWeight: 'bold', 
+                              lineHeight: '1.4',
+                              borderTop: '2px solid var(--primary)'
+                           }}>
+                              {ad.script.split('AI SUGGESTION')[0].substring(0, 120)}...
+                           </p>
+                        </div>
+
+                        <div style={{ position: 'absolute', top: '5%', right: '5%', background: 'var(--primary)', color: 'black', padding: '0.3rem 0.8rem', borderRadius: '4px', fontWeight: 'bold' }}>
+                           KES {product?.price}
+                        </div>
                     </div>
 
-                    <div className="flex flex-col gap-2">
-                       <h4>Generated Video / Audio Package</h4>
-                       <div style={{ background: '#000', width: '100%', aspectRatio: '16/9', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px' }}>
-                          <span style={{ color: '#fff', fontSize: '0.9rem', opacity: 0.7 }}>[Spliced MP4 Video Mock Preview]</span>
-                       </div>
+                    <div className="mt-6">
+                       <h4 style={{ color: 'var(--secondary)' }}>Marketing Script</h4>
+                       <p style={{ fontSize: '0.9rem', fontStyle: 'italic', margin: '0.5rem 0' }}>"{ad.script.split('AI SUGGESTION')[0]}"</p>
                        
-                       <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-                         * Sandbox Note: Final file dynamically assembled at {ad.videoUrl}.
-                       </p>
+                       {ad.script.includes('AI SUGGESTION') && (
+                          <div className="mt-4 p-3" style={{ background: 'rgba(57, 255, 20, 0.1)', borderLeft: '3px solid var(--primary)', borderRadius: '4px' }}>
+                             <p style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 'bold' }}>AI BUSINESS SUGGESTION:</p>
+                             <p style={{ fontSize: '0.8rem' }}>{ad.script.split('AI SUGGESTION:')[1]}</p>
+                          </div>
+                       )}
                     </div>
                  </div>
               )}

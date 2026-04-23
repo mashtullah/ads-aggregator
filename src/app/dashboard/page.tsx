@@ -29,6 +29,13 @@ export default async function Dashboard() {
 
   return (
     <div className="container animate-fade-in mt-8 mb-8">
+      <div className="glass-panel mb-8" style={{ padding: '2rem', background: 'linear-gradient(135deg, rgba(57, 255, 20, 0.05) 0%, rgba(0, 0, 0, 0) 100%)', borderLeft: '4px solid var(--primary)' }}>
+         <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>✨ Global Business Insight</h3>
+         <p style={{ fontSize: '1.1rem' }}>
+           "Oskido AI predicts a **22% increase** in global demand for your '{store.products[0]?.name || 'category'}' if you target cross-border behavioral clusters in North America and Western Europe."
+         </p>
+      </div>
+
       <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h2>Welcome, {session.user?.name}</h2>

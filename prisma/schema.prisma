@@ -17,6 +17,9 @@ model User {
   accounts      Account[]
   sessions      Session[]
   store         Store?
+  sentMessages  Message[]
+  reviews       Review[]
+  notifications Notification[]
 }
 
 model Account {
@@ -61,12 +64,16 @@ model Store {
   description     String?
   slug            String    @unique
   whatsappNumber  String?
+  isVerified      Boolean   @default(false)
+  averageRating   Float     @default(0)
   metaAccessToken String?   @db.Text
   metaAccountId   String?
-  isSubscribed    Boolean   @default(false)
+  isSubscribed    Boolean   @default(true)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   products        Product[]
+  messages        Message[]
+  reviews         Review[]
 
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -101,4 +108,40 @@ model Advertisement {
   updatedAt       DateTime @updatedAt
 
   product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  storeId   String
+  senderId  String
+  content   String   @db.Text
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  store     Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  sender    User     @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id         String   @id @default(cuid())
+  storeId    String
+  reviewerId String
+  rating     Int      // 1 to 5
+  text       String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  store      Store    @relation(fields: [storeId], references: [id], onDelete: Cascade)
+  reviewer   User     @relation(fields: [reviewerId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

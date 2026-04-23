@@ -1,25 +1,31 @@
 import { db } from "@/lib/prisma";
 import Link from "next/link";
 
+import SearchHeader from "./SearchHeader";
+
 export const dynamic = 'force-dynamic';
 
-export default async function Marketplace() {
+export default async function Marketplace(props: { searchParams: Promise<{ q?: string }> }) {
+  const searchParams = await props.searchParams;
+  const qStr = searchParams.q || "";
+
   const products = await db.product.findMany({
+    where: {
+      OR: [
+        { name: { contains: qStr } },
+        { description: { contains: qStr } },
+        { brand: { contains: qStr } }
+      ]
+    },
     include: { store: true },
     orderBy: { createdAt: 'desc' }
   });
 
   return (
     <div className="container animate-fade-in mt-8 mb-8">
-      <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-        <h2>Global Marketplace</h2>
-        <p>Discover products mapped from our global creator network.</p>
-        <div className="input-group mt-4" style={{ maxWidth: '400px', margin: '1rem auto 0' }}>
-          <input type="text" className="input" placeholder="Search for electronics, fashion..." />
-        </div>
-      </div>
-
-      <div className="flex" style={{ flexWrap: 'wrap', gap: '1.5rem' }}>
+      <SearchHeader searchParams={{ q: qStr }} />
+      
+      <div className="flex" style={{ flexWrap: 'wrap', gap: '1.5rem', marginTop: '2rem' }}>
         {products.map(product => (
           <div key={product.id} className="glass-panel" style={{ flex: '1 1 250px', padding: '1.5rem', display: 'flex', flexDirection: 'column' }}>
             {product.imageUrl && (

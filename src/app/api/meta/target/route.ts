@@ -27,7 +27,7 @@ export async function POST(req: Request) {
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
-           { role: "system", content: "You are a Meta Ads Targeting specialist. Given a product and ad, output a strict JSON summarizing the optimal audience: { ageRange: string, locations: string[], interests: string[] }" },
+           { role: "system", content: "You are a Global Meta Ads Targeting specialist. Focus on international behavioral patterns and cross-border demographics rather than local city isolation. Focus on global focus, not limited to specific cities like Nairobi or Kisumu. Output JSON: { ageRange: string, locations: string[], interests: string[] }" },
            { role: "user", content: `Product: ${ad.product.name}. Description: ${ad.product.description}. Script: ${ad.script}` }
         ],
         response_format: { type: "json_object" }

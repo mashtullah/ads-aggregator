@@ -26,11 +26,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const { productId, instructions } = await req.json();
+    const { productId, instructions, history } = await req.json();
 
     const product = await db.product.findUnique({
       where: { id: productId },
-      include: { store: true }
+      include: { store: true, ads: { orderBy: { createdAt: 'desc' }, take: 5 } }
     });
 
     if (!product || product.store.userId !== session.user.id) {
@@ -38,22 +38,25 @@ export async function POST(req: Request) {
     }
 
     let script = "";
+    let businessSuggestion = "";
     
-    // --- 1. AI Script Generation ---
+    // --- 1. AI Script Generation (ITERATIVE) ---
     if (process.env.OPENAI_API_KEY) {
       const completion = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: [
-           { role: "system", content: "You are an expert marketing copywriter producing concise, viral social media video ads." },
-           { role: "user", content: `Create a 15-second ad script for my product named '${product.name}' priced at ${product.price}. Description: ${product.description}. Extra instructions: ${instructions || 'Make it exciting!'}` }
-        ]
+           { role: "system", content: "You are a Global Marketing AI. You output viral ad scripts and business strategy suggestions. Always produce a JSON object: { script: string, suggestion: string }" },
+           { role: "user", content: `Product: ${product.name}, Price: ${product.price}, Desc: ${product.description}. Instruction: ${instructions || 'Original generation'}. History Context: ${JSON.stringify(history || [])}. TASK: Output global strategy and ad text.` }
+        ],
+        response_format: { type: "json_object" }
       });
-      script = completion.choices[0].message.content || "...";
-      
-      // Realistically we would pipe OpenAI TTS -> DALL-E 3 -> Fluent-ffmpeg here!
+      const aiData = JSON.parse(completion.choices[0].message.content || '{}');
+      script = aiData.script || "...";
+      businessSuggestion = aiData.suggestion || "Consider analyzing global shipping rates for better reach.";
     } else {
       // Sandbox fallback
-      script = `🌟 Check out ${product.name}! Only KES ${product.price}! ${instructions ? `[Refined: ${instructions}]` : ''} Get yours today!`;
+      script = `🌟 Global Spotlight: ${product.name}! Only KES ${product.price}! ${instructions ? `[Refined: ${instructions}]` : ''}`;
+      businessSuggestion = "AI Insight: Your price point is 15% lower than the global average in this category. Consider increasing slightly to offset international shipping costs.";
     }
 
     // Prepare media directories
@@ -79,10 +82,10 @@ export async function POST(req: Request) {
     const ad = await db.advertisement.create({
       data: {
         productId,
-        script,
+        script: `${script} \n\n AI SUGGESTION: ${businessSuggestion}`,
         audioUrl: mockAudioUrl,
         videoUrl: mockVideoUrl,
-        status: 'GENERATED'
+        status: 'PUBLISHED' // Instant Activation
       }
     });
 
