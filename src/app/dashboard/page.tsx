@@ -26,15 +26,16 @@ export default async function Dashboard() {
   if (!store) return <div>Store not found</div>;
 
   // Predict dummy engagement levels scaling against physical items mapped
-  const totalViews = store.products.length * 1425;
-  const publishedAdsCount = store.products.reduce((acc, p) => acc + p.ads.filter(a => a.status === 'PUBLISHED').length, 0);
+  const products = store?.products || [];
+  const totalViews = products.length * 1425;
+  const publishedAdsCount = products.reduce((acc, p) => acc + (p.ads?.filter(a => a.status === 'PUBLISHED').length || 0), 0);
 
   return (
     <div className="container animate-fade-in mt-8 mb-8">
       <div className="glass-panel mb-8" style={{ padding: '2rem', background: 'linear-gradient(135deg, rgba(57, 255, 20, 0.05) 0%, rgba(0, 0, 0, 0) 100%)', borderLeft: '4px solid var(--primary)' }}>
          <h3 style={{ color: 'var(--primary)', marginBottom: '0.5rem' }}>✨ Global Business Insight</h3>
          <p style={{ fontSize: '1.1rem' }}>
-           "Oskido AI predicts a **22% increase** in global demand for your '{store.products[0]?.name || 'category'}' if you target cross-border behavioral clusters in North America and Western Europe."
+           "Oskido AI predicts a **22% increase** in global demand for your '{products[0]?.name || 'category'}' if you target cross-border behavioral clusters in North America and Western Europe."
          </p>
       </div>
 

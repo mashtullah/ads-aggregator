@@ -6,8 +6,8 @@ import SearchHeader from "./SearchHeader";
 export const dynamic = 'force-dynamic';
 
 export default async function Marketplace(props: { searchParams: Promise<{ q?: string }> }) {
-  const searchParams = await props.searchParams;
-  const qStr = searchParams.q || "";
+  const sParams = await props.searchParams;
+  const qStr = sParams?.q || "";
 
   const products = await db.product.findMany({
     where: {
