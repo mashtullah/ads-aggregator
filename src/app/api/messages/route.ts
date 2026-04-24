@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/prisma';
+import { resend, EMAIL_FROM } from '@/lib/resend';
 
 export async function POST(req: Request) {
   try {
@@ -24,20 +25,38 @@ export async function POST(req: Request) {
       },
     });
 
-    // Create a notification for the store owner
+    // Notify the store owner
     const store = await db.store.findUnique({
       where: { id: storeId },
-      select: { userId: true, name: true }
+      include: { user: { select: { email: true, id: true } } }
     });
 
-    if (store) {
+    if (store && store.user.email) {
+      // 1. In-app Notification
       await db.notification.create({
         data: {
-          userId: store.userId,
-          title: 'New Message',
-          message: `You have a new message from ${session.user.name} regarding your store ${store.name}.`,
+          userId: store.user.id,
+          title: 'New Inquiry 📩',
+          message: `${session.user.name} sent a message about ${store.name}`,
           link: '/dashboard/inbox',
         }
+      });
+
+      // 2. Real Email Notification via Resend
+      await resend.emails.send({
+        from: EMAIL_FROM,
+        to: store.user.email,
+        subject: `[Oskido] New Inquiry from ${session.user.name}`,
+        html: `
+          <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #333; background: #000; color: white; border-radius: 10px;">
+            <h2 style="color: #39FF14;">New Inquiry</h2>
+            <p><strong>From:</strong> ${session.user.name} (${session.user.email})</p>
+            <p style="background: #111; padding: 15px; border-radius: 8px; border-left: 4px solid #39FF14;">
+              "${content.trim()}"
+            </p>
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/inbox" style="display: inline-block; padding: 12px 24px; background-color: #39FF14; color: black; text-decoration: none; border-radius: 5px; font-weight: bold; margin-top: 20px;">Reply in Dashboard</a>
+          </div>
+        `
       });
     }
 
