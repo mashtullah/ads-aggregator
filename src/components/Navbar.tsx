@@ -20,6 +20,11 @@ export default async function Navbar() {
           
           {session ? (
             <>
+              {(session.user as any).role === 'ADMIN' && (
+                <Link href="/admin/stores" className="btn btn-outline" style={{ borderColor: 'var(--primary)', color: 'var(--primary)' }}>
+                   Admin
+                </Link>
+              )}
               <Link href="/dashboard" className="btn btn-outline">
                 Dashboard
               </Link>

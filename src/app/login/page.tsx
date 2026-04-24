@@ -43,7 +43,10 @@ export default function Login() {
             <input id="email" type="email" className="input" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
           </div>
           <div className="input-group">
-            <label htmlFor="password">Password</label>
+            <div className="flex justify-between items-center mb-2">
+               <label htmlFor="password" style={{ margin: 0 }}>Password</label>
+               <Link href="/forgot-password" style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textDecoration: 'none' }}>Forgot Password?</Link>
+            </div>
             <input id="password" type="password" className="input" value={form.password} onChange={e => setForm({...form, password: e.target.value})} required />
           </div>
           

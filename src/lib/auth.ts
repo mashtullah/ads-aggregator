@@ -50,12 +50,15 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.sub as string;
+        session.user.role = token.role as string;
       }
       return session;
     },
     async jwt({ token, user }) {
       if (user) {
         token.sub = user.id;
+        const u = await db.user.findUnique({ where: { id: user.id } });
+        token.role = u?.role || 'USER';
       }
       return token;
     }
