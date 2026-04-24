@@ -59,24 +59,13 @@ export async function POST(req: Request) {
       businessSuggestion = "AI Insight: Your price point is 15% lower than the global average in this category. Consider increasing slightly to offset international shipping costs.";
     }
 
-    // Prepare media directories
-    const uploadDir = join(process.cwd(), 'public', 'uploads');
-    const mediaId = uuidv4();
-    let mockAudioUrl = `/uploads/audio-${mediaId}.mp3`;
-    let mockVideoUrl = `/uploads/ad-${mediaId}.mp4`;
+    // Prepare media URLs (Moving from local /uploads/ to persistent Cloudinary Samples)
+    // In a real production environment, these would be the URLs generated after 
+    // ffmpeg processing and cloudinary.uploader.upload()
+    const mockAudioUrl = "https://res.cloudinary.com/dxrslwh1y/video/upload/v1/samples/audio/sample_audio.mp3";
+    const mockVideoUrl = "https://res.cloudinary.com/dxrslwh1y/video/upload/v1/samples/sea-turtle.mp4";
     
-    try {
-      if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
-      const audioPathDesktop = join(uploadDir, `audio-${mediaId}.mp3`);
-      const videoPathDesktop = join(uploadDir, `ad-${mediaId}.mp4`);
-      await writeFile(audioPathDesktop, Buffer.from('mock audio buffer'));
-      await createMockVideo(videoPathDesktop);
-    } catch (fsError) {
-      console.warn('Filesystem mapping failed on Serverless, using absolute placeholders.');
-      // Vercel fallback URL assignments
-      mockAudioUrl = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
-      mockVideoUrl = 'https://www.w3schools.com/html/mov_bbb.mp4';
-    }
+    // Note: Local FS write logic removed to ensure 100% Vercel compatibility.
 
     // --- 2. Create Ad Object in DB ---
     const ad = await db.advertisement.create({
