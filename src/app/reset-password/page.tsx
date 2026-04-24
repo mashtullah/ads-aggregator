@@ -1,10 +1,8 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function ResetPassword() {
+function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const token = searchParams.get('token');
@@ -45,7 +43,7 @@ export default function ResetPassword() {
     }
   };
 
-  if (!token) return <div className="container">Invalid request</div>;
+  if (!token) return <div className="container p-8">Invalid or missing reset token.</div>;
 
   return (
     <div className="container flex justify-center items-center" style={{ minHeight: '80vh' }}>
@@ -90,5 +88,13 @@ export default function ResetPassword() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function ResetPassword() {
+  return (
+    <Suspense fallback={<div className="container p-8">Loading Secure Portal...</div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
