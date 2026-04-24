@@ -53,8 +53,9 @@ export default async function Marketplace(props: { searchParams: Promise<{ q?: s
             <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', flex: 1, color: 'var(--text-muted)' }}>{product.description?.substring(0, 80)}...</p>
             <Link href={`/store/${product.store.slug}`} className="btn btn-primary mt-4" style={{ textAlign: 'center', textDecoration: 'none' }}>Visit Store</Link>
           </div>
-        ))}
-      </div>
+        );
+      })}
+    </div>
       
       {products.length === 0 && (
          <div className="glass-panel" style={{ padding: '3rem', textAlign: 'center', width: '100%' }}>

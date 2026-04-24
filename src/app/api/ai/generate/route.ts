@@ -3,21 +3,10 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
 import { db } from '@/lib/prisma';
 import OpenAI from 'openai';
-import ffmpeg from 'fluent-ffmpeg';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
-import fs from 'fs';
-import { v4 as uuidv4 } from 'uuid';
 
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || 'fake-mock-key', // Defaults for sandbox
+  apiKey: process.env.OPENAI_API_KEY || 'fake-mock-key', 
 });
-
-// Helper to spawn a dummy .mp4 file since ffmpeg might not be installed on host system
-async function createMockVideo(pathUrl: string) {
-  // Just writes an empty text buffer renamed to .mp4 to prevent crashing the "sandbox".
-  await writeFile(pathUrl, Buffer.from('Mock Video Content'));
-}
 
 export async function POST(req: Request) {
   try {
@@ -59,14 +48,10 @@ export async function POST(req: Request) {
       businessSuggestion = "AI Insight: Your price point is 15% lower than the global average in this category. Consider increasing slightly to offset international shipping costs.";
     }
 
-    // Prepare media URLs (Moving from local /uploads/ to persistent Cloudinary Samples)
-    // In a real production environment, these would be the URLs generated after 
-    // ffmpeg processing and cloudinary.uploader.upload()
+    // Prepare media URLs (Using persistent Cloudinary Samples)
     const mockAudioUrl = "https://res.cloudinary.com/dxrslwh1y/video/upload/v1/samples/audio/sample_audio.mp3";
     const mockVideoUrl = "https://res.cloudinary.com/dxrslwh1y/video/upload/v1/samples/sea-turtle.mp4";
     
-    // Note: Local FS write logic removed to ensure 100% Vercel compatibility.
-
     // --- 2. Create Ad Object in DB ---
     const ad = await db.advertisement.create({
       data: {
