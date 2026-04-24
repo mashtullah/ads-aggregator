@@ -9,23 +9,25 @@ async function checkAdmin() {
   return session && (session.user as any).role === 'ADMIN';
 }
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   if (!await checkAdmin()) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   
   const store = await db.store.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { user: true }
   });
 
   return NextResponse.json({ store });
 }
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   if (!await checkAdmin()) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 
   const { name, isVerified, newPassword } = await req.json();
 
-  const store = await db.store.findUnique({ where: { id: params.id } });
+  const store = await db.store.findUnique({ where: { id } });
   if (!store) return NextResponse.json({ message: 'Not found' }, { status: 404 });
 
   const data: any = { name, isVerified };
@@ -39,7 +41,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 
   const updated = await db.store.update({
-    where: { id: params.id },
+    where: { id },
     data
   });
 
