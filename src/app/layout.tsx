@@ -4,7 +4,7 @@ import Navbar from '@/components/Navbar';
 import Providers from '@/components/Providers';
 
 export const metadata: Metadata = {
-  title: 'Oskido | AI Marketing & Creator Platform',
+  title: 'Oskido | AI Sales, Marketing & Facebook Ads Platform',
   description: 'AI-powered creator stores and marketplace. Generate ads for Meta effortlessly.',
 };
 
