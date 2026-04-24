@@ -11,6 +11,14 @@ export default function EditProduct() {
 
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    price: '',
+    brand: '',
+    description: '',
+    imageUrl: '',
+    isDigital: false
+  });
 
   useEffect(() => {
     fetch(`/api/products/details?id=${productId}`)
